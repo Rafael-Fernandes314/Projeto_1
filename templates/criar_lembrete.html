@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Criar Lembrete{% endblock %}
+
+{% block content %}
+    <section class="pagina">
+        <h1>Criar Lembrete</h1>
+        <form id="form_criar" action="{{url_for('criar')}}" method="post">
+            <label for="titulo">Título</label>
+            <input type="text" id="titulo" name="titulo" required>
+
+            <label for="detalhes">Descrição</label>
+            <textarea id="detalhes" name="detalhes" rows="4" required></textarea>
+
+            <button type="submit">Salvar lembrete</button>
+        </form>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    configurar_pagina_criar();
+});
+</script>
+{% endblock %}

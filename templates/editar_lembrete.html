@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Lembrete{% endblock %}
+
+{% block content %}
+    <section class="pagina">
+        <h1>Editar Lembrete</h1>
+        <form id="form_editar">
+            <label for="titulo">Título</label>
+            <input type="text" id="titulo" name="titulo" required>
+
+            <label for="detalhes">Descrição</label>
+            <textarea id="detalhes" name="detalhes" rows="4" required></textarea>
+
+            <div class="acoes">
+                <button type="submit">Salvar alterações</button>
+                <button id="botao_excluir" type="button" class="secundario">Excluir lembrete</button>
+            </div>
+        </form>
+    </section>
+{% endblock %}

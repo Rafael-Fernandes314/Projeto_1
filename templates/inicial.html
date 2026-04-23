@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+    <section class="boas_vindas">
+        <h1 id="saudacao">Olá, {{nome or 'Usuário'}}.</h1>
+    </section>
+
+    <section id="area_lembretes">
+        <div id="sem_lembretes" class="caixa hidden">
+            <h2 id="mensagem_subtitulo">Você ainda não tem lembretes.</h2>
+            <a class="botao" href="{{url_for('criar')}}">Criar</a>
+        </div>
+
+        <div id="lista_lembretes" class="hidden">
+            <h2>Seus lembretes</h2>
+            <div id="lembretes"></div>
+        </div>
+
+        <div class="acao_logout">
+            <a class="botao_deslogar" href="{{url_for('logout')}}" onclick="deslogar()">Sair</a>
+        </div>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    const saudacao = document.getElementById('saudacao');
+    const nomeLocalStorage = localStorage.getItem('nome_usuario');
+
+    if (!'{{nome}}' && nomeLocalStorage) {
+        saudacao.textContent = `Olá, ${nomeLocalStorage}.`;
+    }
+    mostrar_pagina_inicial();
+});
+
+window.addEventListener('load', function() {
+    mostrar_pagina_inicial();
+});
+</script>
+{% endblock %}
