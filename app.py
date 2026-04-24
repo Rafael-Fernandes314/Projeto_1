@@ -3,9 +3,9 @@ from flask import Flask, render_template, request, redirect, url_for
 app = Flask(__name__)
 
 usuarios_cadastrados = []
-lembretes = []  
+lembretes = []
 
-# cadastro 
+
 @app.route("/cadastro", methods=["POST"])
 def cadastro():
     nome = request.form.get("nome")
@@ -19,7 +19,6 @@ def cadastro():
     return redirect(url_for("login", mensagem="cadastro_sucesso"))
 
 
-# login
 @app.route("/login", methods=["GET", "POST"])
 def login():
     mensagem = request.args.get('mensagem')
@@ -36,14 +35,12 @@ def login():
     return render_template("login.html", mensagem=mensagem)
 
 
-# tela inicial
 @app.route("/inicial")
 def inicial():
     nome = request.args.get('nome')
     return render_template("inicial.html", nome=nome, lembretes=lembretes)
 
 
-# criar lembrete
 @app.route("/criar", methods=["GET", "POST"])
 def criar():
     if request.method == "POST":
@@ -61,7 +58,6 @@ def criar():
     return render_template("criar_lembrete.html")
 
 
-# editar lembrete
 @app.route("/editar/<int:id>", methods=["GET", "POST"])
 def editar(id):
     lembrete = lembretes[id]
@@ -75,14 +71,12 @@ def editar(id):
     return render_template("editar_lembrete.html", lembrete=lembrete)
 
 
-# excluir lembrete
 @app.route("/excluir/<int:id>")
 def excluir(id):
     lembretes.pop(id)
     return redirect(url_for("inicial"))
 
 
-# sair
 @app.route("/logout")
 def logout():
     return redirect(url_for("login"))

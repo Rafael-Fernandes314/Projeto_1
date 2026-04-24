@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Página Inicial{% endblock %}
+
+{% block content %}
+
+<h1>Bem-vindo {{ nome }}</h1>
+
+<a href="{{ url_for('criar') }}">Criar lembrete</a>
+
+<h2>Lembretes</h2>
+
+{% if lembretes %}
+    {% for lembrete in lembretes %}
+        <div>
+            <strong>{{ lembrete.titulo }}</strong><br>
+            {{ lembrete.detalhes }}<br>
+            <a href="{{ url_for('editar', id=lembrete.id) }}">Editar</a>
+        </div>
+        <br>
+    {% endfor %}
+{% else %}
+    <p>Nenhum lembrete.</p>
+{% endif %}
+
+<br>
+<a href="{{ url_for('logout') }}">Sair</a>
+
+{% endblock %}
