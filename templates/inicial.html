@@ -6,24 +6,24 @@
 
 <h1>Bem-vindo, {{ nome }}!</h1>
 
-<a href="{{ url_for('criar') }}">Criar lembrete</a>
+<div class="topo">
+    <a href="{{ url_for('criar') }}">Criar lembrete</a>
+</div>
 
 <h2>Lembretes</h2>
 
 {% if lembretes %}
     {% for lembrete in lembretes %}
-        <div>
-            <strong>{{ lembrete.titulo }}</strong><br>
-            {{ lembrete.detalhes }}<br>
+        <div class="lembrete">
+            <h3>{{ lembrete.titulo }}</h3>
+            <p>{{ lembrete.detalhes }}</p>
             <a href="{{ url_for('editar', id=lembrete.id) }}">Editar</a>
         </div>
-        <br>
     {% endfor %}
 {% else %}
     <p>Nenhum lembrete.</p>
 {% endif %}
 
-<br>
 <a href="{{ url_for('logout') }}">Sair</a>
 
 {% endblock %}

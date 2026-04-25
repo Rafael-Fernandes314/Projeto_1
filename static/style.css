@@ -67,3 +67,27 @@ img#logo {
     height: 50px;
     margin-bottom: 5px;
 }
+body {
+    font-family: Arial, sans-serif;
+}
+
+.topo {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.lembrete {
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+.lembrete h3 {
+    margin: 0;
+}
+
+.lembrete p{
+    margin: 5px 0;
+}
