@@ -6,7 +6,7 @@ usuarios_cadastrados = []
 lembretes = []
 
 
-@app.route("/cadastro", methods=["POST"])
+@app.route("/cadastro", methods=["GET", "POST"])
 def cadastro():
     nome = request.form.get("nome")
     email = request.form.get("email")
@@ -15,6 +15,9 @@ def cadastro():
         'nome': nome,
         'email': email
     })
+
+    if request.method == "GET":
+        return render_template("cadastro.html")
 
     return redirect(url_for("login", mensagem="cadastro_sucesso"))
 
