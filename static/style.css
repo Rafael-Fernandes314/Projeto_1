@@ -94,11 +94,14 @@ button {
 }
 .link {
     text-decoration: none;
-    background-color: #f9f9f9;
+    background-color: #ffffff;
+}
+.link_inicio {
+    text-decoration: none;
 }
 .lembrete {
     border: 1px solid #ccc;
-    background-color: #f9f9f9;
+    background-color: #ffffff;
     padding: 20px;
     margin-bottom: 15px;
     border-radius: 5px;
@@ -107,18 +110,18 @@ button {
 .lembrete h3 {
     margin: 0;
     padding: 3px;
-    background-color: #f9f9f9;
+    background-color: #ffffff;
 }
 .lembrete p{
     margin: 5px 0;
-    background-color: #f9f9f9;
+    background-color: #ffffff;
 }
 
 .icons {
     display: flex;
     flex-direction: row;
     gap: 10px;
-    background-color: #f9f9f9;
+    background-color: #ffffff;
 }
 #mais {
     margin-top: 8%;
