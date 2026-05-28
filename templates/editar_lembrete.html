@@ -6,7 +6,7 @@
 <section>
     <h1>Editar Lembrete</h1>
 
-    <form id="form_editar" method="post">
+    <form id="form_editar" method="post" action="{{ url_for('editar', id=lembrete.id) }}">
         <label for="titulo">Título</label>
         <input type="text" id="titulo" name="titulo" value="{{ lembrete.titulo }}" required>
 
@@ -23,7 +23,7 @@
 <script>
 document.getElementById('botao_excluir').addEventListener('click', function() {
     if (confirm('Tem certeza que deseja excluir?')) {
-        window.location.href = "/excluir/{{ lembrete.id }}";
+        window.location.href = "{{ url_for('excluir', id=lembrete.id) }}";
     }
 });
 </script>

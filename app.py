@@ -1,5 +1,5 @@
 import sqlite3
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, make_response
 
 app = Flask(__name__)
 
@@ -31,6 +31,15 @@ def obter_conexao():
     return conexao
 
 
+def obter_usuario(usuario_id):
+    if not usuario_id:
+        return None
+    conexao = obter_conexao()
+    usuario = conexao.execute("SELECT nome FROM usuarios WHERE id = ?", (usuario_id,)).fetchone()
+    conexao.close()
+    return usuario['nome'] if usuario else None
+
+
 @app.route("/", methods=["GET", "POST"])
 def cadastro():
     if request.method == "POST":
@@ -57,24 +66,30 @@ def login():
         senha = request.form.get("senha") 
         
         conexao = obter_conexao()
-
         usuario = conexao.execute("SELECT * FROM usuarios WHERE email = ? AND senha = ?", (email, senha)).fetchone()
         conexao.close()
 
-        return redirect(url_for("inicio", nome=usuario['nome']))
+        if usuario:
+            resp = make_response(redirect(url_for("inicio")))
+            resp.set_cookie("user_id", str(usuario['id']), httponly=True)
+            return resp
+        return render_template("login.html", mensagem="login_invalido")
 
     return render_template("login.html", mensagem=mensagem)
 
 
 @app.route("/inicio")
 def inicio():
-    nome = request.args.get('nome')    
+    user_id = request.cookies.get('user_id')
+    nome = obter_usuario(user_id)
+    if nome is None:
+        return redirect(url_for("login", mensagem="precisa_logar"))
     return render_template("inicio.html", nome=nome)
 
 
 @app.route("/ver")
 def ver():
-    conexao = sqlite3.connect('banco.db')
+    conexao = obter_conexao()
     conexao.row_factory = sqlite3.Row
     lembretes_db = conexao.execute("SELECT * FROM lembretes").fetchall()
     conexao.close()
@@ -88,10 +103,7 @@ def criar():
         detalhes = request.form.get("detalhes")
 
         conexao = obter_conexao()
-        conexao.execute("""
-                        INSERT INTO lembretes 
-                        (titulo, detalhes) VALUES (?, ?)""",
-                        (titulo, detalhes))
+        conexao.execute("""INSERT INTO lembretes (titulo, detalhes) VALUES (?, ?)""", (titulo, detalhes))
         conexao.commit()
         conexao.close()
 
@@ -108,7 +120,7 @@ def editar(id):
         titulo = request.form.get("titulo")
         detalhes = request.form.get("detalhes")
 
-        conexao.execute("UPDATE lembretes SET lembrete = ?, descricao = ? WHERE id = ?", (titulo, detalhes, id))
+        conexao.execute("UPDATE lembretes SET titulo = ?, detalhes = ? WHERE id = ?", (titulo, detalhes, id))
         conexao.commit()
         conexao.close()
         return redirect(url_for("ver"))
@@ -129,7 +141,9 @@ def excluir(id):
 
 @app.route("/logout")
 def logout():
-    return redirect(url_for("login"))
+    resp = make_response(redirect(url_for("login")))
+    resp.delete_cookie("user_id")
+    return resp
 
 
 if __name__ == "__main__":

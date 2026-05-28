@@ -43,6 +43,14 @@
 - Excluir lembretes  
 - Filtro de lembretes
 
+## Banco de Dados
+
+- Uso de SQLite para armazenar dados
+- Inserção de usuários e lembretes
+- Consulta de usuários e lembretes
+- Edição de lembretes
+- Exclusão de lembretes
+
 ---
 
 ## Tecnologias
