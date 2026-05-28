@@ -1,25 +1,51 @@
+import sqlite3
 from flask import Flask, render_template, request, redirect, url_for
 
 app = Flask(__name__)
 
-usuarios_cadastrados = []
-lembretes = []
+def iniciar_banco():
+    conexao = sqlite3.connect('banco.db')
+    cursor = conexao.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS usuarios ( 
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            email TEXT NOT NULL,
+            senha VARCHAR(20) NOT NULL UNIQUE) 
+    """) 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS lembretes ( 
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            titulo TEXT NOT NULL,
+            detalhes TEXT NOT NULL)
+    """)
+    conexao.commit()
+    conexao.close()
+
+iniciar_banco()
+
+def obter_conexao():
+    conexao = sqlite3.connect('banco.db')
+    conexao.row_factory = sqlite3.Row
+    return conexao
 
 
-@app.route("/cadastro", methods=["GET", "POST"])
+@app.route("/", methods=["GET", "POST"])
 def cadastro():
-    nome = request.form.get("nome")
-    email = request.form.get("email")
+    if request.method == "POST":
+        nome = request.form.get("nome")
+        email = request.form.get("email")
+        senha = request.form.get("senha")
 
-    usuarios_cadastrados.append({
-        'nome': nome,
-        'email': email
-    })
+        conexao = obter_conexao()
+        conexao.execute("INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)", (nome, email, senha))
+        conexao.commit()
+        conexao.close()
 
-    if request.method == "GET":
-        return render_template("cadastro.html")
+        return redirect(url_for("login", mensagem="cadastro_sucesso"))
 
-    return redirect(url_for("login", mensagem="cadastro_sucesso"))
+    return render_template("cadastro.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -28,20 +54,31 @@ def login():
 
     if request.method == "POST":
         email = request.form.get("email")
-        usuario = next((i for i in usuarios_cadastrados if i['email'] == email), None)
+        senha = request.form.get("senha") 
+        
+        conexao = obter_conexao()
 
-        if not usuario:
-            return redirect(url_for("login", mensagem="email_nao_encontrado"))
+        usuario = conexao.execute("SELECT * FROM usuarios WHERE email = ? AND senha = ?", (email, senha)).fetchone()
+        conexao.close()
 
-        return redirect(url_for("inicial", nome=usuario['nome']))
+        return redirect(url_for("inicio", nome=usuario['nome']))
 
     return render_template("login.html", mensagem=mensagem)
 
 
-@app.route("/inicial")
-def inicial():
-    nome = request.args.get('nome')
-    return render_template("inicial.html", nome=nome, lembretes=lembretes)
+@app.route("/inicio")
+def inicio():
+    nome = request.args.get('nome')    
+    return render_template("inicio.html", nome=nome)
+
+
+@app.route("/ver")
+def ver():
+    conexao = sqlite3.connect('banco.db')
+    conexao.row_factory = sqlite3.Row
+    lembretes_db = conexao.execute("SELECT * FROM lembretes").fetchall()
+    conexao.close()
+    return render_template("ver_lembretes.html", lembretes=lembretes_db)
 
 
 @app.route("/criar", methods=["GET", "POST"])
@@ -50,34 +87,44 @@ def criar():
         titulo = request.form.get("titulo")
         detalhes = request.form.get("detalhes")
 
-        lembretes.append({
-            "id": len(lembretes),
-            "titulo": titulo,
-            "detalhes": detalhes
-        })
+        conexao = obter_conexao()
+        conexao.execute("""
+                        INSERT INTO lembretes 
+                        (titulo, detalhes) VALUES (?, ?)""",
+                        (titulo, detalhes))
+        conexao.commit()
+        conexao.close()
 
-        return redirect(url_for("inicial"))
+        return redirect(url_for("ver"))
 
     return render_template("criar_lembrete.html")
 
 
 @app.route("/editar/<int:id>", methods=["GET", "POST"])
 def editar(id):
-    lembrete = lembretes[id]
+    conexao = obter_conexao()
 
     if request.method == "POST":
-        lembrete["titulo"] = request.form.get("titulo")
-        lembrete["detalhes"] = request.form.get("detalhes")
+        titulo = request.form.get("titulo")
+        detalhes = request.form.get("detalhes")
 
-        return redirect(url_for("inicial"))
+        conexao.execute("UPDATE lembretes SET lembrete = ?, descricao = ? WHERE id = ?", (titulo, detalhes, id))
+        conexao.commit()
+        conexao.close()
+        return redirect(url_for("ver"))
 
+    lembrete = conexao.execute("SELECT * FROM lembretes WHERE id = ?", (id,)).fetchone()
+    conexao.close()
     return render_template("editar_lembrete.html", lembrete=lembrete)
 
 
 @app.route("/excluir/<int:id>")
 def excluir(id):
-    lembretes.pop(id)
-    return redirect(url_for("inicial"))
+    conexao = obter_conexao()
+    conexao.execute("DELETE FROM lembretes WHERE id = ?", (id,))
+    conexao.commit()
+    conexao.close()
+    return redirect(url_for("ver"))
 
 
 @app.route("/logout")
