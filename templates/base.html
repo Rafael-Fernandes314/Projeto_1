@@ -8,7 +8,10 @@
 </head>
 <body>
     <nav>
-        <img src="static/assets/Memoriza.png" alt="Memoriza"> <strong>Início | Lembrentes | Conta</strong>
+        <img src="{{ url_for('static', filename='Memoriza.png') }}" alt="Memoriza"> 
+        <strong><a href="{{ url_for('inicio') }}" class="cabecalho">Início |</a>
+        <a href="{{ url_for('ver') }}" class="cabecalho">Lembrentes</a> |
+        <a href="{{ url_for('logout') }}" class="cabecalho">Sair</a></strong>
     </nav>
     <main>
         {% block content %}
@@ -16,7 +19,7 @@
     </main>
 
     <footer>
-    ©️2026 Memoriza. Todos os direitos reservados. <img src="static/assets/Caracol.png" id="logo" alt="Logo Memoriza">
+    &copy 2026 Memoriza. Todos os direitos reservados. <img src="{{ url_for('static', filename='Caracol.png') }}" alt="Logo Memoriza" id="caracol">
     </footer>
 
     <script src="{{url_for('static', filename='script.js')}}"></script>
