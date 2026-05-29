@@ -5,7 +5,12 @@ app = Flask(__name__)
 
 app.secret_key = "nemteconto"
 
-def iniciar_banco():
+def criar_conexao():
+    conexao = sqlite3.connect('banco.db')
+    conexao.row_factory = sqlite3.Row
+    return conexao
+
+def iniciar_conexao():
     conexao = sqlite3.connect('banco.db')
     cursor = conexao.cursor()
     cursor.execute("""
@@ -25,11 +30,6 @@ def iniciar_banco():
     conexao.close()
 
 iniciar_banco()
-
-def obter_conexao():
-    conexao = sqlite3.connect('banco.db')
-    conexao.row_factory = sqlite3.Row
-    return conexao
 
 def obter_usuario(usuario_id):
     if not usuario_id:
