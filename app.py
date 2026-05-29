@@ -1,12 +1,13 @@
 import sqlite3
-from flask import Flask, render_template, request, redirect, url_for, make_response
+from flask import Flask, render_template, request, redirect, url_for, session
 
 app = Flask(__name__)
+
+app.secret_key = "nemteconto"
 
 def iniciar_banco():
     conexao = sqlite3.connect('banco.db')
     cursor = conexao.cursor()
-
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS usuarios ( 
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -29,7 +30,6 @@ def obter_conexao():
     conexao = sqlite3.connect('banco.db')
     conexao.row_factory = sqlite3.Row
     return conexao
-
 
 def obter_usuario(usuario_id):
     if not usuario_id:
@@ -70,9 +70,9 @@ def login():
         conexao.close()
 
         if usuario:
-            resp = make_response(redirect(url_for("inicio")))
-            resp.set_cookie("user_id", str(usuario['id']), httponly=True)
-            return resp
+            
+            session["user_id"] = usuario['id']
+            return redirect(url_for("inicio"))
         return render_template("login.html", mensagem="login_invalido")
 
     return render_template("login.html", mensagem=mensagem)
@@ -80,15 +80,20 @@ def login():
 
 @app.route("/inicio")
 def inicio():
-    user_id = request.cookies.get('user_id')
+    user_id = session.get('user_id')
     nome = obter_usuario(user_id)
     if nome is None:
         return redirect(url_for("login", mensagem="precisa_logar"))
     return render_template("inicio.html", nome=nome)
 
 
+
+
 @app.route("/ver")
 def ver():
+    if "user_id" not in session:
+        return redirect(url_for("login", mensagem="precisa_logar"))
+        
     conexao = obter_conexao()
     conexao.row_factory = sqlite3.Row
     lembretes_db = conexao.execute("SELECT * FROM lembretes").fetchall()
@@ -98,6 +103,9 @@ def ver():
 
 @app.route("/criar", methods=["GET", "POST"])
 def criar():
+    if "user_id" not in session:
+        return redirect(url_for("login", mensagem="precisa_logar"))
+
     if request.method == "POST":
         titulo = request.form.get("titulo")
         detalhes = request.form.get("detalhes")
@@ -114,6 +122,9 @@ def criar():
 
 @app.route("/editar/<int:id>", methods=["GET", "POST"])
 def editar(id):
+    if "user_id" not in session:
+        return redirect(url_for("login", mensagem="precisa_logar"))
+
     conexao = obter_conexao()
 
     if request.method == "POST":
@@ -132,6 +143,9 @@ def editar(id):
 
 @app.route("/excluir/<int:id>")
 def excluir(id):
+    if "user_id" not in session:
+        return redirect(url_for("login", mensagem="precisa_logar"))
+
     conexao = obter_conexao()
     conexao.execute("DELETE FROM lembretes WHERE id = ?", (id,))
     conexao.commit()
@@ -141,9 +155,8 @@ def excluir(id):
 
 @app.route("/logout")
 def logout():
-    resp = make_response(redirect(url_for("login")))
-    resp.delete_cookie("user_id")
-    return resp
+    session.clear()
+    return redirect(url_for("login"))
 
 
 if __name__ == "__main__":
