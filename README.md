@@ -28,7 +28,7 @@
 
 ## Justificativa
 
-- Esse projeto foi pensado para resolver esse problema de forma simples. A ideia é criar um sistema fácil de usar, onde qualquer pessoa possa anotar seus lembretes e acessar depois. Também é uma forma prática de aplicar na prática o que foi aprendido com Flask, como rotas, formulários, login e manipulação de dados.
+- Além de resolver o problema proposto, o projeto também permite aplicar conceitos importantes do desenvolvimento web, como autenticação de usuários, proteção de rotas, integração com banco de dados utilizando SQLAlchemy e organização da aplicação por meio do framework Flask.
 
 ---
 
@@ -36,7 +36,8 @@
 
 - Cadastro de usuários  
 - Login  
-- Logout  
+- Logout
+- Autenticação de usuários com flask-login
 - Criar lembretes  
 - Listar lembretes  
 - Editar lembretes  
@@ -45,19 +46,22 @@
 
 ## Banco de Dados
 
-- Uso de SQLite para armazenar dados
-- Inserção de usuários e lembretes
-- Consulta de usuários e lembretes
-- Edição de lembretes
-- Exclusão de lembretes
+- Banco de dados SQLite
+- Utilização do SQLAlchemy como ORM
+- Modelos de Usuário e Lembretes
+- Relacionamentos utilizando chaves estrangeiras
+- Operações CRUD
 
 ---
 
 ## Tecnologias
 
-- Python  
-- Flask  
-- HTML  
+- Python
+- Flask
+- Flask-Login
+- SQLAlchemy
+- SQLite
+- HTML
 - CSS
 - JavaScript
 
@@ -67,13 +71,16 @@
 
 A aplicação terá:
 
-- Rotas para cada página  
-- Templates HTML (com um layout base)  
-- Arquivos estáticos (CSS, JS e imagens usadas se necessário)  
-- Formulários para cadastro, login e lembretes  
-- Uso de GET e POST
-- Rotas com parâmetros
-- Filtros usando query string
+- Rotas para cada página
+- Templates HTML utilizando um template base
+- Arquivos estáticos (CSS, JavaScript e imagens)
+- Formulários para cadastro, login e gerenciamento de lembretes
+- Métodos GET e POST
+- Rotas parametrizadas
+- Filtros utilizando query string
+- Autenticação com Flask-Login
+- Proteção de rotas
+- SQLAlchemy
 
 ---
 
