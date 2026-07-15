@@ -15,10 +15,9 @@ class User(UserMixin):
         self.nome = nome
         self.email = email
 
-def iniciar_banco():
+def iniciar_conexao():
     conexao = sqlite3.connect('banco.db')
     cursor = conexao.cursor()
-
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS usuarios ( 
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,7 +34,7 @@ def iniciar_banco():
     conexao.commit()
     conexao.close()
 
-iniciar_banco()
+iniciar_conexao()
 
 def obter_conexao():
     conexao = sqlite3.connect('banco.db')
@@ -45,13 +44,11 @@ def obter_conexao():
 @login_manager.user_loader
 def load_user(user_id):
     conexao = obter_conexao()
-    usuario = conexao.execute("SELECT * FROM usuarios WHERE id = ?",(user_id,)).fetchone()
+    usuario = conexao.execute("SELECT * FROM usuarios WHERE id = ?", (user_id,)).fetchone()
     conexao.close()
-
     if usuario:
-        return User(usuario["id"],usuario["nome"],usuario["email"])
+        return User(usuario["id"], usuario["nome"], usuario["email"])
     return None
-
 
 @app.route("/", methods=["GET", "POST"])
 def cadastro():
@@ -64,7 +61,6 @@ def cadastro():
         conexao.execute("INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)", (nome, email, senha))
         conexao.commit()
         conexao.close()
-
         return redirect(url_for("login", mensagem="cadastro_sucesso"))
 
     return render_template("cadastro.html")
@@ -89,13 +85,13 @@ def login():
             login_user(user)
             return redirect(url_for("inicio"))
         return render_template("login.html", mensagem="login_invalido")
-
     return render_template("login.html", mensagem=mensagem)
 
 @app.route("/inicio")
 @login_required
 def inicio():
     return render_template("inicio.html", nome=current_user.nome)
+    
 
 @app.route("/ver")
 @login_required
@@ -152,13 +148,11 @@ def excluir(id):
     conexao.close()
     return redirect(url_for("ver"))
 
-
 @app.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect(url_for("login"))
-
 
 if __name__ == "__main__":
     app.run(debug=True)
