@@ -1,55 +1,40 @@
-import sqlite3
 from flask import Flask, render_template, request, redirect, url_for
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
- 
+from flask_sqlalchemy import SQLAlchemy
+
 app = Flask(__name__)
 app.secret_key = 'jurema'
+
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///banco.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = "login"
 
-class User(UserMixin):
-    def __init__(self, id, nome, email):
-        self.id = id
-        self.nome = nome
-        self.email = email
+class User(UserMixin, db.Model):
+    __tablename__ = 'usuarios'
+    id = db.Column(db.Integer, primary_key=True)
+    nome = db.Column(db.String(150), nullable=False)
+    email = db.Column(db.String(150), nullable=False, unique=True)
+    senha = db.Column(db.String(256), nullable=False)
+    lembretes = db.relationship('Lembrete', backref='autor', lazy=True)
 
-def iniciar_conexao():
-    conexao = sqlite3.connect('banco.db')
-    cursor = conexao.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS usuarios ( 
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            nome TEXT NOT NULL,
-            email TEXT NOT NULL UNIQUE,
-            senha TEXT NOT NULL) 
-    """) 
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS lembretes ( 
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            titulo TEXT NOT NULL,
-            detalhes TEXT NOT NULL)
-    """)
-    conexao.commit()
-    conexao.close()
+class Lembrete(db.Model):
+    __tablename__ = 'lembretes'
+    id = db.Column(db.Integer, primary_key=True)
+    titulo = db.Column(db.String(150), nullable=False)
+    detalhes = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
 
-iniciar_conexao()
-
-def obter_conexao():
-    conexao = sqlite3.connect('banco.db')
-    conexao.row_factory = sqlite3.Row
-    return conexao
+with app.app_context():
+    db.create_all()
 
 @login_manager.user_loader
 def load_user(user_id):
-    conexao = obter_conexao()
-    usuario = conexao.execute("SELECT * FROM usuarios WHERE id = ?", (user_id,)).fetchone()
-    conexao.close()
-    if usuario:
-        return User(usuario["id"], usuario["nome"], usuario["email"])
-    return None
+    return User.query.get(int(user_id))
 
 @app.route("/", methods=["GET", "POST"])
 def cadastro():
@@ -59,11 +44,10 @@ def cadastro():
         senha = request.form.get("senha")
 
         senha_hash = generate_password_hash(senha)
-
-        conexao = obter_conexao()
-        conexao.execute("INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)", (nome, email, senha_hash))
-        conexao.commit()
-        conexao.close()
+        
+        novo_usuario = User(nome=nome, email=email, senha=senha_hash)
+        db.session.add(novo_usuario)
+        db.session.commit()
         return redirect(url_for("login", mensagem="cadastro_sucesso"))
 
     return render_template("cadastro.html")
@@ -79,13 +63,10 @@ def login():
         email = request.form.get("email")
         senha = request.form.get("senha")
 
-        conexao = obter_conexao()
-        usuario = conexao.execute("SELECT * FROM usuarios WHERE email = ?",(email,)).fetchone()
-        conexao.close()
+        usuario = User.query.filter_by(email=email).first()
 
-        if usuario and check_password_hash(usuario["senha"], senha):
-            user = User(usuario["id"], usuario["nome"], usuario["email"])
-            login_user(user)
+        if usuario and check_password_hash(usuario.senha, senha):
+            login_user(usuario)
             return redirect(url_for("inicio"))
     
         return render_template("login.html", mensagem="login_invalido")
@@ -101,10 +82,7 @@ def inicio():
 @app.route("/ver")
 @login_required
 def ver():
-    conexao = obter_conexao()
-    conexao.row_factory = sqlite3.Row
-    lembretes_db = conexao.execute("SELECT * FROM lembretes").fetchall()
-    conexao.close()
+    lembretes_db = Lembrete.query.filter_by(user_id=current_user.id).all()
     return render_template("ver_lembretes.html", lembretes=lembretes_db)
 
 
@@ -115,10 +93,9 @@ def criar():
         titulo = request.form.get("titulo")
         detalhes = request.form.get("detalhes")
 
-        conexao = obter_conexao()
-        conexao.execute("INSERT INTO lembretes (titulo, detalhes) VALUES (?, ?)", (titulo, detalhes))
-        conexao.commit()
-        conexao.close()
+        novo_lembrete = Lembrete(titulo=titulo, detalhes=detalhes, user_id=current_user.id)
+        db.session.add(novo_lembrete)
+        db.session.commit()
 
         return redirect(url_for("ver"))
 
@@ -128,29 +105,23 @@ def criar():
 @app.route("/editar/<int:id>", methods=["GET", "POST"])
 @login_required
 def editar(id):
-    conexao = obter_conexao()
+    lembrete = Lembrete.query.get_or_404(id)
 
     if request.method == "POST":
-        titulo = request.form.get("titulo")
-        detalhes = request.form.get("detalhes")
-
-        conexao.execute("UPDATE lembretes SET titulo = ?, detalhes = ? WHERE id = ?", (titulo, detalhes, id))
-        conexao.commit()
-        conexao.close()
+        lembrete.titulo = request.form.get("titulo")
+        lembrete.detalhes = request.form.get("detalhes")
+        db.session.commit()
         return redirect(url_for("ver"))
 
-    lembrete = conexao.execute("SELECT * FROM lembretes WHERE id = ?", (id,)).fetchone()
-    conexao.close()
     return render_template("editar_lembrete.html", lembrete=lembrete)
 
 
 @app.route("/excluir/<int:id>")
 @login_required
 def excluir(id):
-    conexao = obter_conexao()
-    conexao.execute("DELETE FROM lembretes WHERE id = ?", (id,))
-    conexao.commit()
-    conexao.close()
+    lembrete = Lembrete.query.get_or_404(id)
+    db.session.delete(lembrete)
+    db.session.commit()
     return redirect(url_for("ver"))
 
 @app.route("/logout")
