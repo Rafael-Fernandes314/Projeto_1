@@ -1,9 +1,10 @@
 import sqlite3
 from flask import Flask, render_template, request, redirect, url_for
-from flask_login import LoginManager,UserMixin,login_user,logout_user,login_required,current_user
-
+from werkzeug.security import generate_password_hash, check_password_hash
+from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+ 
 app = Flask(__name__)
-app.secret_key = 'batata'
+app.secret_key = 'jurema'
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -23,7 +24,7 @@ def iniciar_conexao():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             nome TEXT NOT NULL,
             email TEXT NOT NULL UNIQUE,
-            senha VARCHAR(20) NOT NULL) 
+            senha TEXT NOT NULL) 
     """) 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS lembretes ( 
@@ -57,8 +58,10 @@ def cadastro():
         email = request.form.get("email")
         senha = request.form.get("senha")
 
+        senha_hash = generate_password_hash(senha)
+
         conexao = obter_conexao()
-        conexao.execute("INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)", (nome, email, senha))
+        conexao.execute("INSERT INTO usuarios (nome, email, senha) VALUES (?, ?, ?)", (nome, email, senha_hash))
         conexao.commit()
         conexao.close()
         return redirect(url_for("login", mensagem="cadastro_sucesso"))
@@ -77,14 +80,16 @@ def login():
         senha = request.form.get("senha")
 
         conexao = obter_conexao()
-        usuario = conexao.execute("SELECT * FROM usuarios WHERE email = ? AND senha = ?",(email, senha)).fetchone()
+        usuario = conexao.execute("SELECT * FROM usuarios WHERE email = ?",(email,)).fetchone()
         conexao.close()
 
-        if usuario:
+        if usuario and check_password_hash(usuario["senha"], senha):
             user = User(usuario["id"], usuario["nome"], usuario["email"])
             login_user(user)
             return redirect(url_for("inicio"))
+    
         return render_template("login.html", mensagem="login_invalido")
+
     return render_template("login.html", mensagem=mensagem)
 
 @app.route("/inicio")
@@ -111,7 +116,7 @@ def criar():
         detalhes = request.form.get("detalhes")
 
         conexao = obter_conexao()
-        conexao.execute("""INSERT INTO lembretes (titulo, detalhes) VALUES (?, ?)""", (titulo, detalhes))
+        conexao.execute("INSERT INTO lembretes (titulo, detalhes) VALUES (?, ?)", (titulo, detalhes))
         conexao.commit()
         conexao.close()
 
