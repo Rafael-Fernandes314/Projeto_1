@@ -13,6 +13,25 @@
         <label for="detalhes">Descrição</label>
         <textarea id="detalhes" name="detalhes" rows="4" required>{{ lembrete.detalhes }}</textarea>
 
+        <textarea name="detalhes">{{ lembrete.detalhes }}</textarea>
+
+        <select name="categoria">
+            <option value="{{ lembrete.categoria }}">{{ lembrete.categoria }}</option>
+            <option value="Faculdade">Faculdade</option>
+            <option value="Trabalho">Trabalho</option>
+            <option value="Casa">Casa</option>
+            <option value="Saúde">Saúde</option>
+        </select>
+
+        <select name="prioridade">
+            <option value="{{ lembrete.prioridade }}">{{ lembrete.prioridade }}</option>
+            <option value="Baixa">Baixa</option>
+            <option value="Média">Média</option>
+            <option value="Alta">Alta</option>
+        </select>
+
+        <input type="date" name="data" value="{{ lembrete.data }}">
+
         <div class="botoes">
             <button type="submit">Salvar alterações</button>
             <button id="botao_excluir" type="button" class="secundario">Excluir lembrete</button>

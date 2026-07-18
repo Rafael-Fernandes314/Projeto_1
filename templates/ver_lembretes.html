@@ -10,11 +10,44 @@
     {% for lembrete in lembretes %}
         <div class="lembrete">
             <h3>{{ lembrete.titulo }}</h3>
+
             <p>{{ lembrete.detalhes }}</p>
+
+            <p><strong>Categoria:</strong> {{ lembrete.categoria }}</p>
+
+            <p><strong>Prioridade:</strong> {{ lembrete.prioridade }}</p>
+
+            <p><strong>Data:</strong> {{ lembrete.data }}</p>
+
+            <p>
+                <strong>Status:</strong>
+                {% if lembrete.concluido %}
+                    Concluído ✔
+                {% else %}
+                    Pendente
+                {% endif %}
+            </p>
+
             <div class="icons">
-                <a href="{{ url_for('editar', id=lembrete.id) }}" class="link"><button id="botao">Editar</button></a>
-                <a href="{{ url_for('criar') }}" class="link"><img src="{{ url_for('static', filename='mais.jpg') }}" id="mais"></a>
+                <a href="{{ url_for('editar', id=lembrete.id) }}" class="link">
+                    <button id="botao">Editar</button>
+                </a>
+
+                <a href="{{ url_for('concluir', id=lembrete.id) }}" class="link">
+                    <button id="botao">
+                        {% if lembrete.concluido %}
+                            Desmarcar
+                        {% else %}
+                            Concluir
+                        {% endif %}
+                    </button>
+                </a>
+
+                <a href="{{ url_for('criar') }}" class="link">
+                    <img src="{{ url_for('static', filename='mais.jpg') }}" id="mais">
+                </a>
             </div>
+
         </div>
     {% endfor %}
 {% else %}

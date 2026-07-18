@@ -24,9 +24,16 @@ class User(UserMixin, db.Model):
 
 class Lembrete(db.Model):
     __tablename__ = 'lembretes'
+
     id = db.Column(db.Integer, primary_key=True)
     titulo = db.Column(db.String(150), nullable=False)
     detalhes = db.Column(db.Text, nullable=False)
+
+    categoria = db.Column(db.String(50), nullable=False)
+    prioridade = db.Column(db.String(20), nullable=False)
+    data = db.Column(db.String(20), nullable=False)
+    concluido = db.Column(db.Boolean, default=False)
+
     user_id = db.Column(db.Integer, db.ForeignKey('usuarios.id'), nullable=False)
 
 with app.app_context():
@@ -92,15 +99,26 @@ def criar():
     if request.method == "POST":
         titulo = request.form.get("titulo")
         detalhes = request.form.get("detalhes")
+        categoria = request.form.get("categoria")
+        prioridade = request.form.get("prioridade")
+        data = request.form.get("data")
 
-        novo_lembrete = Lembrete(titulo=titulo, detalhes=detalhes, user_id=current_user.id)
+        novo_lembrete = Lembrete(
+            titulo=titulo,
+            detalhes=detalhes,
+            categoria=categoria,
+            prioridade=prioridade,
+            data=data,
+            concluido=False,
+            user_id=current_user.id
+        )
+
         db.session.add(novo_lembrete)
         db.session.commit()
 
         return redirect(url_for("ver"))
 
     return render_template("criar_lembrete.html")
-
 
 @app.route("/editar/<int:id>", methods=["GET", "POST"])
 @login_required
@@ -110,6 +128,9 @@ def editar(id):
     if request.method == "POST":
         lembrete.titulo = request.form.get("titulo")
         lembrete.detalhes = request.form.get("detalhes")
+        lembrete.categoria = request.form.get("categoria")
+        lembrete.prioridade = request.form.get("prioridade")
+        lembrete.data = request.form.get("data")
         db.session.commit()
         return redirect(url_for("ver"))
 
@@ -122,6 +143,20 @@ def excluir(id):
     lembrete = Lembrete.query.get_or_404(id)
     db.session.delete(lembrete)
     db.session.commit()
+    return redirect(url_for("ver"))
+
+@app.route("/concluir/<int:id>")
+@login_required
+def concluir(id):
+    lembrete = Lembrete.query.get_or_404(id)
+
+    if lembrete.concluido:
+        lembrete.concluido = False
+    else:
+        lembrete.concluido = True
+
+    db.session.commit()
+
     return redirect(url_for("ver"))
 
 @app.route("/logout")
